@@ -13,50 +13,21 @@ function Square(props) {
 }
   
   class Board extends React.Component {
-    constructor(props) {
-      super(props);
-      this.state = {
-        squares: Array(9).fill(null),
-        xIsNext: true,
-      };
-      
-    }
-
-    handleClick(i) {
-      const squares = this.state.squares.slice(); //this creates a copy for immutability reasons
-      if (calculateWinner(squares) || squares[i]) {
-        return;
-      }
-      squares[i] = this.state.xIsNext ? 'X' : 'O'; //this syntax seems common. I think it works like booleanValue ? ifBoolTrueDo : ifBoolFalseDo
-      this.setState({
-        squares: squares,
-        xIsNext: !this.state.xIsNext,
-      });
-    }
 
     renderSquare(i) {
       return (
         <Square 
-          value={this.state.squares[i]}
-          onClick={() => this.handleClick(i)} 
+          value={this.props.squares[i]}
+          onClick={() => this.props.onClick(i)} 
         /> //so anything passed in here will be accessible in Square by using this.props.whatever
       );
     }
   
     render() {
-      const winner = calculateWinner(this.state.squares);
-      let status;
-      if (winner) {
-        status = 'Winner: ' + winner;
-      } else {
-        status = 'Next Player: ' + (this.state.xIsNext ? "X" : "O");
-      }
-  
       return (
         <div>
-          <div className="status">{status}</div> 
           <div className="board-row">
-          {this.renderSquare(0)}
+            {this.renderSquare(0)}
             {this.renderSquare(1)}
             {this.renderSquare(2)}
           </div>
@@ -76,15 +47,79 @@ function Square(props) {
   }
   
   class Game extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state = {
+        history: [{
+          squares: Array(9).fill(null),
+        }],
+        stepNumber: 0,
+        xIsNext: true,
+      }
+    }
+
+    handleClick(i) {
+      const history = this.state.history.slice(0, this.state.stepNumber + 1);
+      const current = history[history.length -1];
+      const squares = current.squares.slice();
+
+      if (calculateWinner(squares) || squares[i]) {
+        return;
+      }
+
+      squares[i] = this.state.xIsNext ? 'X' : 'O'; 
+      
+      this.setState({
+        history: history.concat([{
+          squares: squares,
+        }]),
+        stepNumber: history.length,
+        xIsNext: !this.state.xIsNext,
+      })
+      
+    }
+
+    jumpTo(step) {
+      this.setState({
+        stepNumber: step,
+        xIsNext: (step % 2) === 0
+      })
+    }
+
     render() {
+      const history = this.state.history;
+      const current = history[this.state.stepNumber];
+      const winner = calculateWinner(current.squares);
+
+      const moves = history.map((step, move) => {
+        const desc = move ? 
+          'Go to move #' + move : 
+          'Go to game start';
+        return (
+          <li>
+            <button onClick={() => this.jumpTo(move)}>{desc}</button>
+          </li>
+        )
+      })
+
+      let status;
+      if (winner) {
+        status = 'Winner: ' + winner;
+      } else {
+        status = 'Next Player: ' + (this.state.xIsNext ? 'X' : 'O')
+      }
+
       return (
         <div className="game">
           <div className="game-board">
-            <Board />
+            <Board
+              squares={current.squares}
+              onClick={(i) => this.handleClick(i)}
+            />
           </div>
           <div className="game-info">
-            <div>{/* status */}</div>
-            <ol>{/* TODO */}</ol>
+            <div>{status}</div>
+            <ol>{moves}</ol>
           </div>
         </div>
       );
@@ -101,11 +136,9 @@ function Square(props) {
       [2, 5, 8],
       [0, 4, 8],
       [2, 4, 6],
-    ]; //these are all of the possible combinations of matching indexes that would indicate winning values of a 3x3 grid, 
-    //i.e. 0,1,2 represents the top row of the grid
+    ]; 
     for (let i = 0; i < lines.length; i++) {
-      const [a, b, c] = lines[i];//declares an array of [a = lines[i][0], b = lines[i][1] . . .)
-      //checks if squares[a] first to make sure that it's not 3 missing nulls. 
+      const [a, b, c] = lines[i];
       if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
         return squares[a];
       }
@@ -119,6 +152,5 @@ function Square(props) {
     document.getElementById('root')
   );
 
-  //Ok so here's what I think is happening based on just skimming the code
-  //1. the classes are defined as extensions of React.Component, (which includes a .render() method which is being overridden?)
+ 
   
