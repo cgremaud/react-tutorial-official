@@ -3,10 +3,20 @@ import ReactDOM from 'react-dom';
 import './index.css';
 
 class Square extends React.Component {
+
+    constructor(props) {
+      super(props);
+      this.state = {
+        value: null,
+      }
+    }
     render() {
       return (
-        <button className="square">
-          {/* TODO */}
+        <button className="square" 
+        onClick={() => {
+          this.setState({value: 'X'});
+        }}>
+          {this.state.value}
         </button>
       );
     }
@@ -14,7 +24,7 @@ class Square extends React.Component {
   
   class Board extends React.Component {
     renderSquare(i) {
-      return <Square />;
+      return <Square value={i} />;
     }
   
     render() {
@@ -22,9 +32,9 @@ class Square extends React.Component {
   
       return (
         <div>
-          <div className="status">{status}</div>
+          <div className="status">{status}</div> 
           <div className="board-row">
-            {this.renderSquare(0)}
+          {this.renderSquare(0)}
             {this.renderSquare(1)}
             {this.renderSquare(2)}
           </div>
@@ -65,4 +75,7 @@ class Square extends React.Component {
     <Game />,
     document.getElementById('root')
   );
+
+  //Ok so here's what I think is happening based on just skimming the code
+  //1. the classes are defined as extensions of React.Component, (which includes a .render() method which is being overridden?)
   
